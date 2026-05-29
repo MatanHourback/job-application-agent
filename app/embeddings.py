@@ -1,12 +1,12 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 import os
  
  
 # --- Configuration ---
-CHUNK_SIZE = 500        # Characters per chunk (good for resumes - sections aren't huge)
-CHUNK_OVERLAP = 50      # Overlap so context isn't lost at chunk boundaries
+CHUNK_SIZE = 500 # Characters per chunk
+CHUNK_OVERLAP = 50 # Overlap so context isn't lost at chunk boundaries
 RESUME_COLLECTION = "resume"
 JD_COLLECTION = "job_description"
 CHROMA_DIR = "./chroma_db"  # Local folder where ChromaDB saves data
@@ -87,6 +87,16 @@ def retrieve(query: str, collection_name: str, k: int = 4) -> list[str]:
     vector_store = load_vector_store(collection_name)
     results = vector_store.similarity_search(query, k=k)
     return [doc.page_content for doc in results]
+
+def clear_collection(collection_name: str):
+    """Delete and recreate a collection to ensure fresh data."""
+    import chromadb
+    client = chromadb.PersistentClient(path=CHROMA_DIR)
+    try:
+        client.delete_collection(collection_name)
+        print(f"[Embeddings] Cleared collection '{collection_name}'")
+    except Exception:
+        pass  # collection didn't exist yet
  
  
 # --- Quick test ---

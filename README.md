@@ -4,8 +4,7 @@ An AI-powered agent that analyzes your resume against a job description, flags s
 
 ## Architecture
 
-```
-Resume PDF + Job Description
+  Resume PDF + Job Description
         ↓
   PyMuPDF (text extraction)
         ↓
@@ -16,49 +15,32 @@ Resume PDF + Job Description
   LangChain RAG Chain (Phase 2)
         ↓
   Skill Gap Analysis + Cover Letter
-```
 
 ## Project Structure
 
-```
 job-application-agent/
 ├── app/
+│   ├── __init__.py
 │   ├── main.py          # FastAPI app + endpoints
 │   ├── parser.py        # PDF + text parsing
 │   ├── embeddings.py    # Chunking + ChromaDB indexing
 │   └── agent.py         # LangChain chains 
+├── evals/ # Evaluation scripts 
+│   ├── __init__.py
+│   ├── test_cases.py
+│   ├── judge.py
+│   └── run_evals.py
 ├── frontend/
 │   └── index.html       # UI
-├── evals/               # Evaluation scripts 
 ├── requirements.txt
 ├── .env.example
 └── README.md
-```
 
-## Setup
-
-### 1. Clone and install dependencies
-
-```bash
-git clone <your-repo>
-cd job-application-agent
-pip install -r requirements.txt
-```
-
-### 2. Set up environment variables
-
-```bash
-cp .env.example .env
-# Open .env and add your OpenAI API key
-```
-
-### 3. Run the server
+## Run the server then open the UI
 
 ```bash
 uvicorn app.main:app --reload
 ```
-
-### 4. Open the UI
 
 Visit `http://localhost:8000` in your browser.
 
@@ -77,7 +59,7 @@ Visit `http://localhost:8000` in your browser.
 | 3 | 🔜 | FastAPI refinement + error handling |
 | 4 | 🔜 | Evals with RAGAS (faithfulness, relevance, recall) |
 
-## Eval Metrics (Phase 4)
+## Eval Metrics
 
 | Metric | Description |
 |--------|-------------|

@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -14,8 +16,7 @@ app = FastAPI(title="Job Application Agent")
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
  
  
-# --- Request / Response models ---
- 
+#Request/Response models
 class AnalyzeRequest(BaseModel):
     job_description: str
  
@@ -24,12 +25,11 @@ class AnalyzeResponse(BaseModel):
     cover_letter: str
  
  
-# --- In-memory flag: tracks whether a resume has been indexed this session ---
+#track whether a resume has been indexed this session
 resume_indexed = {"status": False}
  
  
-# --- Routes ---
- 
+#Routes
 @app.get("/")
 def root():
     return FileResponse("frontend/index.html")
@@ -45,13 +45,13 @@ async def upload_resume(file: UploadFile = File(...)):
  
     file_bytes = await file.read()
  
-    # Step 1: Parse PDF → clean text
+    #Parse PDF → clean text
     resume_text = parse_pdf_resume(file_bytes)
  
     if not resume_text.strip():
         raise HTTPException(status_code=400, detail="Could not extract text from PDF. Is it a scanned image?")
  
-    # Step 2: Chunk + embed + store in ChromaDB
+    #Chunk + embed + store in ChromaDB
     index_document(resume_text, RESUME_COLLECTION)
     resume_indexed["status"] = True
  
@@ -83,7 +83,7 @@ async def analyze(request: AnalyzeRequest):
     )
  
  
-# --- Health check ---
+#Health check
 @app.get("/health")
 def health():
     return {"status": "ok"}

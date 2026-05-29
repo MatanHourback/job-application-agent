@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Job Application Agent</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --border: #2a2a2a;
+      --accent: #4addf0;
+      --accent-dim: #2e87aa;
+      --text: #e8e8e8;
+      --muted: #666;
+      --error: #32ca58;
+      --radius: 4px;
+    }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 48px 24px;
+    }
+
+    header {
+      max-width: 860px;
+      margin: 0 auto 56px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    header h1 span { color: var(--accent); }
+
+    header p {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: right;
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+
+    .card-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .upload-zone {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 32px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(200, 240, 74, 0.04);
+    }
+
+    .upload-zone input { display: none; }
+
+    .upload-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .upload-zone p {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .upload-zone .file-name {
+      margin-top: 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+    }
+
+    textarea {
+      width: 100%;
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.6;
+      padding: 14px;
+      resize: vertical;
+      min-height: 180px;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus { outline: none; border-color: var(--accent); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-outline:hover { background: rgba(200,240,74,0.08); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0d0d0d;
+    }
+
+    .btn-primary:hover { background: #d8ff5a; }
+    .btn-primary:disabled { background: #333; color: var(--muted); cursor: not-allowed; }
+
+    .btn-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 14px;
+    }
+
+    .analyze-section {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .analyze-section .btn-row {
+      justify-content: center;
+    }
+
+    .status {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      display: none;
+    }
+
+    .status.info { background: #1a2200; color: var(--accent); border: 1px solid var(--accent-dim); display: block; }
+    .status.error { background: #2a0000; color: var(--error); border: 1px solid var(--error); display: block; }
+    .status.loading { background: #1a1a1a; color: var(--muted); border: 1px solid var(--border); display: block; }
+
+    .results-grid {
+      grid-column: 1 / -1;
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .results-grid.visible { display: grid; }
+
+    .result-box {
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: #ccc;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .result-box::-webkit-scrollbar { width: 4px; }
+    .result-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .steps {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 0;
+      margin-bottom: 8px;
+    }
+
+    .step {
+      flex: 1;
+      padding: 10px 0;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+      border-bottom: 2px solid var(--border);
+      transition: all 0.3s;
+    }
+
+    .step.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .step.done { color: var(--accent-dim); border-bottom-color: var(--accent-dim); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Job<span>Agent</span></h1>
+  <p>RAG-powered application assistant<br/>Phase 2 — Live Analysis</p>
+</header>
+
+<main>
+
+  <div class="steps">
+    <div class="step active" id="step1">01 / Upload Resume</div>
+    <div class="step" id="step2">02 / Add Job Description</div>
+    <div class="step" id="step3">03 / Analyze</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Step 01</div>
+    <h2>Upload Your Resume</h2>
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="resumeFile" accept=".pdf" />
+      <span class="upload-icon">📄</span>
+      <p>Click or drag your PDF resume here</p>
+      <div class="file-name" id="fileName"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="uploadResume()">Upload & Index</button>
+    </div>
+    <div class="status" id="uploadStatus"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Step 02</div>
+    <h2>Paste Job Description</h2>
+    <textarea id="jobDescription" placeholder="Paste the full job description here..."></textarea>
+  </div>
+
+  <div class="analyze-section">
+    <div class="btn-row">
+      <button class="btn btn-primary" id="analyzeBtn" disabled onclick="analyze()">
+        ⚡ Analyze Application
+      </button>
+    </div>
+    <div class="status" id="analyzeStatus"></div>
+  </div>
+
+  <div class="results-grid" id="resultsGrid">
+    <div class="card">
+      <div class="card-label">Skill Gap Analysis</div>
+      <div class="result-box" id="skillGaps"></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Cover Letter Draft</div>
+      <div class="result-box" id="coverLetter"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  let resumeUploaded = false;
+
+  const zone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('resumeFile');
+
+  zone.addEventListener('click', () => fileInput.click());
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    fileInput.files = e.dataTransfer.files;
+    showFileName();
+  });
+  fileInput.addEventListener('change', showFileName);
+
+  function showFileName() {
+    const f = fileInput.files[0];
+    document.getElementById('fileName').textContent = f ? f.name : '';
+  }
+
+  function setStatus(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = `status ${type}`;
+  }
+
+  function setStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById(`step${i}`);
+      if (i < n) el.className = 'step done';
+      else if (i === n) el.className = 'step active';
+      else el.className = 'step';
+    }
+  }
+
+  async function uploadResume() {
+    const file = fileInput.files[0];
+    if (!file) return setStatus('uploadStatus', 'Please select a PDF file first.', 'error');
+
+    setStatus('uploadStatus', '⏳ Parsing and indexing resume...', 'loading');
+
+    const form = new FormData();
+    form.append('file', file);
+
+    try {
+      const res = await fetch('/upload-resume', { method: 'POST', body: form });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.detail || 'Upload failed');
+
+      setStatus('uploadStatus', `✓ ${data.message} (${data.character_count} chars extracted)`, 'info');
+      resumeUploaded = true;
+      document.getElementById('analyzeBtn').disabled = false;
+      setStep(2);
+    } catch (err) {
+      setStatus('uploadStatus', `✗ ${err.message}`, 'error');
+    }
+  }
+
+  async function analyze() {
+    const jd = document.getElementById('jobDescription').value.trim();
+    if (!jd) return setStatus('analyzeStatus', 'Please paste a job description first.', 'error');
+    if (!resumeUploaded) return setStatus('analyzeStatus', 'Please upload your resume first.', 'error');
+
+    setStatus('analyzeStatus', '⏳ Analyzing... this may take 10-20 seconds', 'loading');
+    setStep(3);
+
+    try {
+      const res = await fetch('/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_description: jd }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.detail || 'Analysis failed');
+
+      document.getElementById('skillGaps').textContent = data.skill_gaps;
+      document.getElementById('coverLetter').textContent = data.cover_letter;
+      document.getElementById('resultsGrid').classList.add('visible');
+      setStatus('analyzeStatus', '✓ Analysis complete.', 'info');
+    } catch (err) {
+      setStatus('analyzeStatus', `✗ ${err.message}`, 'error');
+    }
+  }
+</script>
+
+</body>
+</html>
